@@ -1,3 +1,6 @@
-* Thu Feb 27 2014 Stephane Desneux <stephane.desneux@open.eurogiciel.org> d8b517b
+* Thu Feb 27 2014 Stephane Desneux <stephane.desneux@open.eurogiciel.org> eba0c0d
+- Added weston start-up files, and split config to subpackage
+
+* Thu Feb 27 2014 Stephane Desneux <stephane.desneux@open.eurogiciel.org> 22746c3
 - initial packaging
 
