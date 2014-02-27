@@ -1,3 +1,4 @@
+%bcond_with wayland
 Name:       weston-generic
 Version:    1
 Release:    0
@@ -8,6 +9,10 @@ BuildArch:  noarch
 Source0:    %{name}-%{version}.tar.bz2
 Source1001: weston-generic.manifest
 Provides:   weston-startup
+
+%if !%{with wayland}
+ExclusiveArch:
+%endif
 
 %description
 This package contains Tizen Generic configuration and set-up for
