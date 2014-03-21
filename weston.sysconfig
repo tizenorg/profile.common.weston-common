@@ -1,0 +1,2 @@
+# path to display manager runtime dir
+XDG_RUNTIME_DIR=/run/display

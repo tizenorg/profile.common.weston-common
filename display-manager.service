@@ -1,0 +1,8 @@
+[Unit]
+Description=Display manager setup service
+
+[Service]
+ExecStart=/usr/bin/chmod g+w /run/display/wayland-0
+
+[Install]
+WantedBy=graphical.target

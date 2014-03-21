@@ -1,0 +1,7 @@
+[Unit]
+Description=Wait for wayland socket
+Requires=display-manager-run.service
+After=display-manager-run.service
+
+[Path]
+PathExists=/run/display/wayland-0

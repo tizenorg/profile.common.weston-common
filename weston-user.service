@@ -1,0 +1,8 @@
+[Unit]
+Description=Shared weston session
+
+[Service]
+ExecStart=/usr/bin/ln -s /run/display/wayland-0 /run/user/%U/
+
+[Install]
+WantedBy=default.target
