@@ -5,14 +5,42 @@ Release:    0
 Summary:    Tizen Generic Weston configuration and set-up
 License:    MIT
 Group:      Base/Configuration
-BuildArch:  noarch
+#BuildArch:  noarch
 Source0:    %{name}-%{version}.tar.bz2
 Source1001: weston-generic.manifest
 Provides:   weston-startup
 
+BuildRequires:	autoconf >= 2.64, automake >= 1.11
+BuildRequires:  libtool >= 2.2
+BuildRequires:  libjpeg-devel
+BuildRequires:  xz
+BuildRequires:  pkgconfig
+BuildRequires:  pkgconfig(libpng)
+BuildRequires:  pkgconfig(xkbcommon)
+BuildRequires:  pkgconfig(wayland-client)
+BuildRequires:  pkgconfig(wayland-cursor)
+BuildRequires:  pkgconfig(wayland-egl)
+BuildRequires:  pkgconfig(egl)
+BuildRequires:  pkgconfig(glesv2)
+BuildRequires:  pkgconfig(pixman-1)
+BuildRequires:  pkgconfig(cairo)
+BuildRequires:  pkgconfig(cairo-egl)
+BuildRequires:  pkgconfig(cairo-glesv2)
+BuildRequires:  pkgconfig(weston)
+BuildRequires:  pkgconfig(glib-2.0)
+BuildRequires:  pkgconfig(gio-2.0)
+
 %if !%{with wayland}
 ExclusiveArch:
 %endif
+
+############ tz-launcher
+%package tz-launcher
+Summary: A small launcher for Wayland compositors.
+
+%description tz-launcher
+A small launcher for Wayland compositors
+############
 
 %description
 This package contains Tizen Generic configuration and set-up for
@@ -30,8 +58,15 @@ compositor.
 cp %{SOURCE1001} .
 
 %build
+cd tz-launcher
+%reconfigure
+make %{?_smp_mflags}
 
 %install
+#install tz-launcher
+cd tz-launcher
+%make_install
+cd ..
 
 # install weston service as 'display-manager.service' as it's the one wanted by graphical.target
 mkdir -p %{buildroot}%{_unitdir}
@@ -104,3 +139,9 @@ ln -s ../weston-user.service  %{_unitdir_user}/default.target.wants/
 %files config
 %manifest %{name}.manifest
 %config %{weston_config_dir}/weston.ini
+
+%files tz-launcher
+%manifest %{name}.manifest
+%defattr(-,root,root)
+%license tz-launcher/COPYING
+%{_bindir}/tz-launcher
