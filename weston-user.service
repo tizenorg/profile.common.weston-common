@@ -2,7 +2,8 @@
 Description=Shared weston session
 
 [Service]
-ExecStart=/usr/bin/ln -s /run/display/wayland-0 /run/user/%U/
+ExecStartPre=/usr/bin/ln -s /run/display/wayland-0 /run/user/%U/
+ExecStart=/usr/bin/tz-launcher /usr/share/applications/weston-terminal.desktop
 
 [Install]
 WantedBy=default.target

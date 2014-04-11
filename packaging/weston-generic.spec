@@ -36,7 +36,7 @@ ExclusiveArch:
 
 ############ tz-launcher
 %package tz-launcher
-Summary: A small launcher for Wayland compositors.
+Summary: A small launcher for Wayland compositors
 
 %description tz-launcher
 A small launcher for Wayland compositors
@@ -107,6 +107,10 @@ cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-tty.rules <<'EOF'
 SUBSYSTEM=="tty", KERNEL=="tty1", GROUP="display", OWNER="display"
 EOF
 
+# install desktop file
+mkdir -p %{buildroot}%{_datadir}/applications
+install -m 0644 weston-terminal.desktop %{buildroot}%{_datadir}/applications
+
 %pre
 # create groups 'display' and 'weston-launch'
 getent group display >/dev/null || %{_sbindir}/groupadd -r -o display
@@ -117,11 +121,11 @@ getent passwd display >/dev/null || %{_sbindir}/useradd -r -g display -G weston-
 
 # setup display manager service
 mkdir -p %{_unitdir}/graphical.target.wants/
-ln -s ../display-manager.path  %{_unitdir}/graphical.target.wants/
+ln -sf ../display-manager.path  %{_unitdir}/graphical.target.wants/
 
 # setup display manager access (inside user session)
 mkdir -p %{_unitdir_user}/default.target.wants/
-ln -s ../weston-user.service  %{_unitdir_user}/default.target.wants/
+ln -sf ../weston-user.service  %{_unitdir_user}/default.target.wants/
 
 %files
 %manifest %{name}.manifest
@@ -135,6 +139,7 @@ ln -s ../weston-user.service  %{_unitdir_user}/default.target.wants/
 %{_unitdir_user}/weston-user.service
 %config %{_sysconfdir}/profile.d/*
 %config %{_sysconfdir}/udev/rules.d/*
+%{_datadir}/applications/*.desktop
 
 %files config
 %manifest %{name}.manifest

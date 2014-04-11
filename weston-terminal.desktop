@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Weston-Terminal
+Type=Application
+Exec=/usr/bin/weston-terminal
+Icon=/usr/share/weston/terminal.png
+
