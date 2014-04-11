@@ -1,5 +1,7 @@
 [Unit]
 Description=Display manager setup service
+Requires=display-manager-run.service
+After=display-manager-run.service
 
 [Service]
 ExecStart=/usr/bin/chmod g+w /run/display/wayland-0

@@ -1,0 +1,5 @@
+ELM_ENGINE=wayland_egl
+ECORE_EVAS_ENGINE=wayland_egl
+ELM_THEME=tizen-HD-light
+ECORE_IMF_MODULE=wayland
+

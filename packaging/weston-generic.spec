@@ -74,9 +74,10 @@ install -m 644 display-manager-run.service %{buildroot}%{_unitdir}/display-manag
 install -m 644 display-manager.service %{buildroot}%{_unitdir}/display-manager.service
 install -m 644 display-manager.path %{buildroot}%{_unitdir}/display-manager.path
 
-# install Environment file for weston service
+# install Environment file for weston service and weston-user.service
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
 install -m 0644 weston.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/weston
+install -m 0644 weston-user.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/weston-user
 
 # install tmpfiles.d(5) conf
 mkdir -p %{buildroot}%{_prefix}/lib/tmpfiles.d
@@ -134,7 +135,7 @@ ln -sf ../weston-user.service  %{_unitdir_user}/default.target.wants/
 %{_unitdir}/display-manager-run.service
 %{_unitdir}/display-manager.service
 %{_unitdir}/display-manager.path
-%config %{_sysconfdir}/sysconfig/weston
+%config %{_sysconfdir}/sysconfig/*
 %{_prefix}/lib/tmpfiles.d/weston.conf
 %{_unitdir_user}/weston-user.service
 %config %{_sysconfdir}/profile.d/*
