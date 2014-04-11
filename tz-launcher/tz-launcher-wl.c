@@ -324,11 +324,15 @@ redraw_handler(struct widget *widget, void *data)
 			allocation.height);
 
 	red = green = blue = 0.0;
-	switch (main_window->user[0] % 3) {
+	switch (getuid() % 10) {
+		case 0: red = green = blue = 0.0; break;
 		case 1: red = 1.0; break;
-		case 2: green = 1.0; break;
-		case 0: blue = 1.0; break;
+		case 2: blue = 1.0; break;
+		case 3: green = 1.0; break;
+		case 9: red = green = 1.0; break;
+		default: red = blue = 1.0; break;
 	}
+
 	cairo_set_source_rgba (cr, red, green, blue, 0.5);
 	cairo_fill (cr);
 
@@ -401,9 +405,18 @@ main_window_destroy ()
 void
 tz_launcher_wl_run (int desktopfiles, gchar ***desktoptable)
 {
-	struct display *display;
+	struct display *display = NULL;
+	int retries = 0;
 
-	display = display_create (NULL, NULL);
+	while (!display) {
+		display = display_create (NULL, NULL);
+		if (!display) {
+			retries++;
+			if (retries > 3)
+				break;
+			sleep (3);
+		}
+	}
 	if (!display) {
 		g_printerr ("Failed to connect to a Wayland compositor !\n");
 		int i;
