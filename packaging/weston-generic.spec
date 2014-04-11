@@ -151,3 +151,4 @@ ln -sf ../weston-user.service  %{_unitdir_user}/default.target.wants/
 %defattr(-,root,root)
 %license tz-launcher/COPYING
 %{_bindir}/tz-launcher
+%{_bindir}/wl-pre

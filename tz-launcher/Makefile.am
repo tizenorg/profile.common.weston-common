@@ -10,7 +10,7 @@ AM_CPPFLAGS = 					\
 
 CLEANFILES =
 
-bin_PROGRAMS += tz-launcher
+bin_PROGRAMS += tz-launcher wl-pre
 
 tz_launcher_LDFLAGS = -export-dynamic
 tz_launcher_CPPFLAGS = $(AM_CPPFLAGS)
@@ -28,3 +28,9 @@ tz_launcher_SOURCES =					\
 	toytoolkit/text-cursor-position-protocol.c	\
 	toytoolkit/workspaces-protocol.c		\
 	toytoolkit/window.c
+
+wl_pre_LDFLAGS = -export-dynamic
+wl_pre_CFLAGS = $(GCC_CFLAGS) $(CLIENT_CFLAGS)
+wl_pre_LDADD = $(DLOPEN_LIBS) $(CLIENT_LIBS)
+
+wl_pre_SOURCES = wl-pre.c
