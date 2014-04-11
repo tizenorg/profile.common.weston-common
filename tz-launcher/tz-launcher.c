@@ -72,7 +72,7 @@ file_is_desktop_file_for_application (GFile *file, gboolean store_values, gchar 
 		if (store_values)
 			*table = values;
 		else
-			g_strfreev(values);			
+			g_strfreev(values);
 	}
 
 	g_key_file_free (keyfile);
@@ -143,6 +143,8 @@ tz_launcher_parse_directory (GFile *directory)
 		GFileType type = g_file_info_get_file_type (info);
 		switch (type) {
 			case G_FILE_TYPE_REGULAR:
+			case G_FILE_TYPE_SYMBOLIC_LINK:
+			case G_FILE_TYPE_UNKNOWN:
 				tz_launcher_parse_file (file);
 				break;
 			case G_FILE_TYPE_DIRECTORY:
@@ -179,6 +181,8 @@ tz_launcher_parse_config_file (GFile *file)
 					g_printerr ("File \"%s\" is special !\n", line);
 					break;
 				case G_FILE_TYPE_REGULAR:
+				case G_FILE_TYPE_SYMBOLIC_LINK:
+				case G_FILE_TYPE_UNKNOWN:
 					tz_launcher_parse_file (linefile);
 					break;
 				case G_FILE_TYPE_DIRECTORY:
@@ -239,6 +243,8 @@ main (int argc, char *argv[])
 				g_printerr ("File \"%s\" is special !\n", argv[i]);
 				break;
 			case G_FILE_TYPE_REGULAR:
+			case G_FILE_TYPE_SYMBOLIC_LINK:
+			case G_FILE_TYPE_UNKNOWN:
 				tz_launcher_parse_file (desktopfile);
 				break;
 			case G_FILE_TYPE_DIRECTORY:
