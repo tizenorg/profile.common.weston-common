@@ -3,7 +3,6 @@ Description=Weston display daemon
 
 [Service]
 ExecStart=/usr/bin/weston-launch -u display -- -i0
-StandardInput=tty
 TTYPath=/dev/tty1
 EnvironmentFile=/etc/sysconfig/weston
 
