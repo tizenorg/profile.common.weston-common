@@ -189,6 +189,34 @@ launcher_button_handler(struct widget *widget,
 	}
 }
 
+static void
+launcher_touch_up_handler(struct widget *widget, struct input *input,
+			     uint32_t serial, uint32_t time, int32_t id,
+			     float x, float y, void *data)
+{
+	struct launcher *launcher = data;
+
+	launcher->focused = 0;
+	widget_schedule_redraw(widget);
+
+	gchar *command = g_strconcat (launcher->exec, " &", NULL);
+	system (command);
+	g_free (command);
+}
+
+static void
+launcher_touch_down_handler(struct widget *widget, struct input *input,
+			     uint32_t serial, uint32_t time, int32_t id,
+			     float x, float y, void *data)
+{
+	struct launcher *launcher = data;
+
+	launcher->focused = 1;
+	widget_schedule_redraw(widget);
+
+	main_window->selected_launcher = launcher;
+}
+
 static int
 launcher_enter_handler(struct widget *widget, struct input *input,
 			     float x, float y, void *data)
@@ -278,6 +306,8 @@ main_window_add_launcher (gchar **desktopentry)
 	widget_set_leave_handler(launcher->widget, launcher_leave_handler);
 	widget_set_motion_handler(launcher->widget, launcher_motion_handler);
 	widget_set_button_handler(launcher->widget, launcher_button_handler);
+	widget_set_touch_down_handler(launcher->widget, launcher_touch_down_handler);
+	widget_set_touch_up_handler(launcher->widget, launcher_touch_up_handler);
 	widget_set_redraw_handler(launcher->widget, launcher_redraw_handler);
 }
 
