@@ -2,9 +2,15 @@
 Description=Weston display daemon
 
 [Service]
-ExecStart=/usr/bin/weston-launch -u display -- -i0
-TTYPath=/dev/tty1
+User=display
+ExecStart=/usr/bin/weston -i0 --log=%h/weston.log
+StandardInput=tty
+TTYPath=/dev/tty7
 EnvironmentFile=/etc/sysconfig/weston
+
+#adding the capability to configure ttys
+#may be needed if the user 'display' doesn't own the tty
+#CapabilityBoundingSet=CAP_SYS_TTY_CONFIG 
 
 [Install]
 WantedBy=graphical.target

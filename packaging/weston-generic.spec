@@ -10,6 +10,12 @@ Source0:    %{name}-%{version}.tar.bz2
 Source1001: weston-generic.manifest
 Provides:   weston-startup
 
+Requires:   weston
+# for getent:
+Requires:   glibc
+# for useradd et al
+Requires:   pwdutils
+
 BuildRequires:	autoconf >= 2.64, automake >= 1.11
 BuildRequires:  libtool >= 2.2
 BuildRequires:  libjpeg-devel
@@ -63,6 +69,9 @@ cd tz-launcher
 make %{?_smp_mflags}
 
 %install
+%define daemon_user display
+%define daemon_group display
+
 #install tz-launcher
 cd tz-launcher
 %make_install
@@ -100,12 +109,17 @@ install -m 0644 weston.ini %{buildroot}%{weston_config_dir}
 # open the graphics device
 mkdir -p %{buildroot}%{_sysconfdir}/udev/rules.d
 cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-dri.rules <<'EOF'
-SUBSYSTEM=="drm", MODE="0660", GROUP="display"
+SUBSYSTEM=="drm", MODE="0660", GROUP="%{daemon_group}", SMACK="*"
 EOF
 
-# user 'display' must own /dev/tty1 for weston to start correctly
+# user 'display' must own /dev/tty7 for weston to start correctly
 cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-tty.rules <<'EOF'
-SUBSYSTEM=="tty", KERNEL=="tty1", GROUP="display", OWNER="display"
+SUBSYSTEM=="tty", KERNEL=="tty7", GROUP="%{daemon_group}", OWNER="%{daemon_user}", SMACK="*"
+EOF
+
+# user 'display' must also be able to access /dev/input/event*
+cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-input.rules <<'EOF'
+SUBSYSTEM=="input", KERNEL=="event*", MODE="0660", GROUP="input", SMACK="*"
 EOF
 
 # install desktop file
@@ -114,19 +128,28 @@ install -m 0644 weston-terminal.desktop %{buildroot}%{_datadir}/applications
 
 %pre
 # create groups 'display' and 'weston-launch'
-getent group display >/dev/null || %{_sbindir}/groupadd -r -o display
+getent group %{daemon_group} >/dev/null || %{_sbindir}/groupadd -r -o %{daemon_group}
+getent group input >/dev/null || %{_sbindir}/groupadd -r -o input
 getent group weston-launch >/dev/null || %{_sbindir}/groupadd -r -o weston-launch
 
 # create user 'display'
-getent passwd display >/dev/null || %{_sbindir}/useradd -r -g display -G weston-launch -d /run/display -s /bin/false -c "Display daemon" display
+getent passwd %{daemon_user} >/dev/null || %{_sbindir}/useradd -r -g %{daemon_group} -d /run/display -s /bin/false -c "Display daemon" %{daemon_user}
+
+# add user 'display' to groups 'weston-launch' and 'input'
+groupmod -A %{daemon_user} weston-launch
+groupmod -A %{daemon_user} input
 
 # setup display manager service
 mkdir -p %{_unitdir}/graphical.target.wants/
 ln -sf ../display-manager.path  %{_unitdir}/graphical.target.wants/
 
 # setup display manager access (inside user session)
-mkdir -p %{_unitdir_user}/default.target.wants/
-ln -sf ../weston-user.service  %{_unitdir_user}/default.target.wants/
+mkdir -p %{_unitdir_user}/default.target.requires/
+ln -sf ../weston-user.service  %{_unitdir_user}/default.target.requires/
+
+%postun
+rm -f %{_unitdir}/graphical.target.wants/display-manager.path
+rm -f %{_unitdir_user}/default.target.requires/weston-user.service
 
 %files
 %manifest %{name}.manifest
