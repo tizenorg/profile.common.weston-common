@@ -174,6 +174,15 @@ load_icon (char *path)
 }
 
 static void
+sigchild_handler (int s)
+{
+	pid_t pid;
+
+	while (pid = waitpid (-1, NULL, WNOHANG), pid > 0)
+		g_printerr ("child %d exited\n", pid);
+}
+
+static void
 launcher_button_handler(struct widget *widget,
 			      struct input *input, uint32_t time,
 			      uint32_t button,
@@ -458,6 +467,8 @@ tz_launcher_wl_run (int desktopfiles, gchar ***desktoptable)
 			g_strfreev (desktoptable[i]);
 		return;
 	}
+
+	signal (SIGCHLD, sigchild_handler);
 
 	main_window_create (display, desktopfiles, desktoptable);
 	display_run (display);
