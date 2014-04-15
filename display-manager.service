@@ -4,7 +4,9 @@ Requires=display-manager-run.service
 After=display-manager-run.service
 
 [Service]
+Type=oneshot
 ExecStart=/usr/bin/chmod g+w /run/display/wayland-0
+ExecStart=/usr/bin/chsmack -a User /run/display/wayland-0
 
 [Install]
 WantedBy=graphical.target

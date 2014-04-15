@@ -114,12 +114,12 @@ EOF
 
 # user 'display' must own /dev/tty7 for weston to start correctly
 cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-tty.rules <<'EOF'
-SUBSYSTEM=="tty", KERNEL=="tty7", GROUP="%{daemon_group}", OWNER="%{daemon_user}", SMACK="*"
+SUBSYSTEM=="tty", KERNEL=="tty7", OWNER="%{daemon_user}", SMACK="^"
 EOF
 
 # user 'display' must also be able to access /dev/input/event*
 cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-input.rules <<'EOF'
-SUBSYSTEM=="input", KERNEL=="event*", MODE="0660", GROUP="input", SMACK="*"
+SUBSYSTEM=="input", KERNEL=="event*", MODE="0660", GROUP="input", SMACK="^"
 EOF
 
 # install desktop file
