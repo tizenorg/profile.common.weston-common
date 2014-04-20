@@ -1,13 +1,13 @@
 %bcond_with wayland
-Name:       weston-generic
+Name:       weston-common
 Version:    1
 Release:    0
-Summary:    Tizen Generic Weston configuration and set-up
+Summary:    Tizen Common Weston configuration and set-up
 License:    MIT
 Group:      Base/Configuration
 #BuildArch:  noarch
 Source0:    %{name}-%{version}.tar.bz2
-Source1001: weston-generic.manifest
+Source1001: weston-common.manifest
 Provides:   weston-startup
 
 Requires:   weston
@@ -49,14 +49,14 @@ A small launcher for Wayland compositors
 ############
 
 %description
-This package contains Tizen Generic configuration and set-up for
+This package contains Tizen Common configuration and set-up for
 the Weston compositor, including systemd unit files.
 
 %package config
-Summary:    Tizen Generic Weston configuration
+Summary:    Tizen Common Weston configuration
 Group:      Base/Configuration
 %description config
-This package contains Tizen Generic configuration for the Weston
+This package contains Tizen Common configuration for the Weston
 compositor.
 
 %prep
