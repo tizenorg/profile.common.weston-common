@@ -192,11 +192,14 @@ launcher_button_handler(struct widget *widget,
 
 	widget_schedule_redraw (widget);
 	if (state == WL_POINTER_BUTTON_STATE_RELEASED) {
-			if (fork () == 0) {
-				gchar **command = g_strsplit (launcher->exec, " ", 0);
-				execvp (command[0], command);
-				g_strfreev (command);
+		gchar **command = g_strsplit (launcher->exec, " ", 0);
+		if (command && command[0]) {
+			if (vfork () == 0) {
+				if (execvp (command[0], command) < 0)
+					_exit (1);
 			}
+		}
+		g_strfreev (command);
 	}
 }
 
@@ -210,11 +213,14 @@ launcher_touch_up_handler(struct widget *widget, struct input *input,
 	launcher->focused = 0;
 	widget_schedule_redraw(widget);
 
-	if (fork () == 0) {
-		gchar **command = g_strsplit (launcher->exec, " ", 0);
-		execvp (command[0], command);
-		g_strfreev (command);
+	gchar **command = g_strsplit (launcher->exec, " ", 0);
+	if (command && command[0]) {
+		if (vfork () == 0) {
+			if (execvp (command[0], command) < 0)
+				_exit (1);
+		}
 	}
+	g_strfreev (command);
 }
 
 static void
