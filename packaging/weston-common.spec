@@ -5,7 +5,6 @@ Release:    0
 Summary:    Tizen Common Weston configuration and set-up
 License:    MIT
 Group:      Base/Configuration
-#BuildArch:  noarch
 Source0:    %{name}-%{version}.tar.bz2
 Source1001: weston-common.manifest
 Provides:   weston-startup
@@ -16,7 +15,7 @@ Requires:   glibc
 # for useradd et al
 Requires:   pwdutils
 
-BuildRequires:	autoconf >= 2.64, automake >= 1.11
+BuildRequires:  autoconf >= 2.64, automake >= 1.11
 BuildRequires:  libtool >= 2.2
 BuildRequires:  libjpeg-devel
 BuildRequires:  xz
@@ -64,7 +63,6 @@ compositor.
 cp %{SOURCE1001} .
 
 %build
-cd tz-launcher
 %reconfigure
 make %{?_smp_mflags}
 
@@ -73,9 +71,7 @@ make %{?_smp_mflags}
 %define daemon_group display
 
 #install tz-launcher
-cd tz-launcher
 %make_install
-cd ..
 
 # install weston service as 'display-manager.service' as it's the one wanted by graphical.target
 mkdir -p %{buildroot}%{_unitdir}
