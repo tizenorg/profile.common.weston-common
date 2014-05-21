@@ -23,9 +23,12 @@
 #ifndef _WINDOW_H_
 #define _WINDOW_H_
 
+/*#include "config.h"*/
+
 #include <xkbcommon/xkbcommon.h>
 #include <wayland-client.h>
 #include <cairo.h>
+/*#include "./shared/config-parser.h"*/
 #include "./shared/zalloc.h"
 
 #define ARRAY_LENGTH(a) (sizeof (a) / sizeof (a)[0])
@@ -269,10 +272,12 @@ typedef void (*widget_axis_handler_t)(struct widget *widget,
 struct window *
 window_create(struct display *display);
 struct window *
-window_create_transient(struct display *display, struct window *parent,
-			int32_t x, int32_t y, uint32_t flags);
-struct window *
 window_create_custom(struct display *display);
+
+void
+window_set_transient_for(struct window *window, struct window *parent_window);
+struct window *
+window_get_transient_for(struct window *window);
 
 int
 window_has_focus(struct window *window);
@@ -361,8 +366,8 @@ display_surface_damage(struct display *display, cairo_surface_t *cairo_surface,
 void
 window_set_buffer_type(struct window *window, enum window_buffer_type type);
 
-int
-window_is_transient(struct window *window);
+enum window_buffer_type
+window_get_buffer_type(struct window *window);
 
 int
 window_is_fullscreen(struct window *window);
@@ -370,9 +375,6 @@ window_is_fullscreen(struct window *window);
 void
 window_set_fullscreen(struct window *window, int fullscreen);
 
-void
-window_set_fullscreen_method(struct window *window,
-			     enum wl_shell_surface_fullscreen_method method);
 int
 window_is_maximized(struct window *window);
 
@@ -604,6 +606,12 @@ output_get_transform(struct output *output);
 
 uint32_t
 output_get_scale(struct output *output);
+
+const char *
+output_get_make(struct output *output);
+
+const char *
+output_get_model(struct output *output);
 
 void
 keysym_modifiers_add(struct wl_array *modifiers_map,
