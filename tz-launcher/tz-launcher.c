@@ -8,6 +8,9 @@
 int desktopfiles;
 gchar **desktoptable[MAX_DESKTOPFILES];
 
+int global_argc;
+char **global_argv;
+
 
 gboolean
 file_is_parsable (GFile *file)
@@ -200,21 +203,12 @@ tz_launcher_parse_config_file (GFile *file)
 }
 
 
-int
-main (int argc, char *argv[])
+void
+parse_args (int argc, char **argv)
 {
-	if (argc < 2) {
-		g_print ("Usage : tz-launcher <file1>.desktop <file2>.desktop <directory>...\n"
-                         "         or\n"
-                         "        tz-launcher -c <list-of-.desktop-files>.conf\n");
-		return 0;
-	}
-
-	desktopfiles = 0;
-	g_type_init ();
-
 
 	int i;
+	desktopfiles = 0;
 	GFile *desktopfile;
 
 	for (i = 1; i < argc ; i++) {
@@ -257,7 +251,36 @@ main (int argc, char *argv[])
 		if (desktopfiles == MAX_DESKTOPFILES)
 			break;
 	}
+}
 
+static void
+sigreload_handler (int s)
+{
+	parse_args (global_argc, global_argv);
+
+	if (desktopfiles > 0)
+		tz_launcher_wl_reload (desktopfiles, desktoptable);
+}
+
+int
+main (int argc, char **argv)
+{
+	if (argc < 2) {
+		g_print ("Usage : tz-launcher <file1>.desktop <file2>.desktop <directory>...\n"
+                         "         or\n"
+                         "        tz-launcher -c <list-of-.desktop-files>.conf\n");
+		return 0;
+	}
+
+	g_type_init ();
+
+
+	signal (SIGUSR1, sigreload_handler);
+	global_argc = argc;
+	global_argv = argv;
+
+
+	parse_args (argc, argv);
 
 	if (desktopfiles > 0)
 		tz_launcher_wl_run (desktopfiles, desktoptable);
