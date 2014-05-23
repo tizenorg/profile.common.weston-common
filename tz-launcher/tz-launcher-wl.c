@@ -32,6 +32,7 @@ struct launcher {
 	gboolean terminal;
 };
 
+struct display *display;
 struct main_window *main_window;
 
 
@@ -452,9 +453,16 @@ main_window_destroy ()
 }
 
 void
+tz_launcher_wl_reload (int desktopfiles, gchar ***desktoptable)
+{
+	main_window_destroy ();
+	main_window_create (display, desktopfiles, desktoptable);
+}
+
+void
 tz_launcher_wl_run (int desktopfiles, gchar ***desktoptable)
 {
-	struct display *display = NULL;
+	display = NULL;
 	int retries = 0;
 
 	while (!display) {
