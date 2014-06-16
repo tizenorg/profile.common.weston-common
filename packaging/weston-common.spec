@@ -135,9 +135,10 @@ getent group weston-launch >/dev/null || %{_sbindir}/groupadd -r -o weston-launc
 # create user 'display'
 getent passwd %{daemon_user} >/dev/null || %{_sbindir}/useradd -r -g %{daemon_group} -d /run/display -s /bin/false -c "Display daemon" %{daemon_user}
 
-# add user 'display' to groups 'weston-launch' and 'input'
+# add user 'display' to groups 'weston-launch', 'input' and 'video'
 groupmod -A %{daemon_user} weston-launch
 groupmod -A %{daemon_user} input
+groupmod -A %{daemon_user} video
 
 # setup display manager service
 mkdir -p %{_unitdir}/graphical.target.wants/
