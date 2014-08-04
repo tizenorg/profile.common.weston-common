@@ -184,6 +184,13 @@ sigchild_handler (int s)
 }
 
 static void
+keyboard_focus_handler(struct window *window,
+		       struct input *input, void *data)
+{
+	window_schedule_redraw(main_window->window);
+}
+
+static void
 launcher_button_handler(struct widget *widget,
 			      struct input *input, uint32_t time,
 			      uint32_t button,
@@ -322,6 +329,7 @@ main_window_add_launcher (gchar **desktopentry)
 	wl_list_insert(main_window->launcher_list.prev, &launcher->link);
 
 	launcher->widget = widget_add_widget(main_window->widget, launcher);
+	window_set_keyboard_focus_handler(main_window->window, keyboard_focus_handler);
 	widget_set_enter_handler(launcher->widget, launcher_enter_handler);
 	widget_set_leave_handler(launcher->widget, launcher_leave_handler);
 	widget_set_motion_handler(launcher->widget, launcher_motion_handler);
