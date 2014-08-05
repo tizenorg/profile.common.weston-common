@@ -3,6 +3,7 @@ Description=Weston display daemon
 
 [Service]
 User=display
+WorkingDirectory=/run/%u
 ExecStart=/usr/bin/weston -i0 --log=%h/weston.log
 StandardInput=tty
 TTYPath=/dev/tty7
