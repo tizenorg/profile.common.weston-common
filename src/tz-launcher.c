@@ -36,9 +36,9 @@ file_is_desktop_file (GFile *file)
 	g_key_file_load_from_file (keyfile, g_file_get_path(file), G_KEY_FILE_NONE, NULL);
 
 	if (g_key_file_has_group (keyfile, "Desktop Entry"))
-		return TRUE;
+		result = TRUE;
 	else
-		return FALSE;
+		result = FALSE;
 
 	g_key_file_free (keyfile);
 	return result;
