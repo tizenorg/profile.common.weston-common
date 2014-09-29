@@ -4,7 +4,8 @@ Description=Weston display daemon
 [Service]
 User=display
 WorkingDirectory=/run/%u
-ExecStart=/bin/sh -c 'backend=drm ; [ -d /dev/dri ] || backend=fbdev ; exec /usr/bin/weston --backend=$backend-backend.so -i0 --log=%h/weston.log'
+# FIXME: log files shouldn't be stored in tmpfs directories (can get quite big and have side effects)
+ExecStart=/bin/sh -c 'backend=drm ; [ -d /dev/dri ] || backend=fbdev ; exec /usr/bin/weston --backend=$backend-backend.so -i0 --log=/run/%u/weston.log'
 StandardInput=tty
 TTYPath=/dev/tty7
 EnvironmentFile=/etc/sysconfig/weston
