@@ -105,17 +105,17 @@ install -m 0644 weston.ini %{buildroot}%{weston_config_dir}
 # open the graphics device
 mkdir -p %{buildroot}%{_sysconfdir}/udev/rules.d
 cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-dri.rules <<'EOF'
-SUBSYSTEM=="drm", MODE="0660", GROUP="%{daemon_group}", SMACK="*"
+SUBSYSTEM=="drm", MODE="0660", GROUP="%{daemon_group}", SECLABEL{smack}="*"
 EOF
 
 # user 'display' must own /dev/tty7 for weston to start correctly
 cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-tty.rules <<'EOF'
-SUBSYSTEM=="tty", KERNEL=="tty7", OWNER="%{daemon_user}", SMACK="^"
+SUBSYSTEM=="tty", KERNEL=="tty7", OWNER="%{daemon_user}", SECLABEL{smack}="^"
 EOF
 
 # user 'display' must also be able to access /dev/input/event*
 cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-input.rules <<'EOF'
-SUBSYSTEM=="input", KERNEL=="event*", MODE="0660", GROUP="input", SMACK="^"
+SUBSYSTEM=="input", KERNEL=="event*", MODE="0660", GROUP="input", SECLABEL{smack}="^"
 EOF
 
 # install desktop file
