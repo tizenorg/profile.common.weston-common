@@ -8,6 +8,7 @@ ExecStart=/bin/sh -c 'backend=drm ; [ -d /dev/dri ] || backend=fbdev ; exec /usr
 StandardInput=tty
 TTYPath=/dev/tty7
 EnvironmentFile=/etc/sysconfig/weston
+Restart=on-failure
 
 #adding the capability to configure ttys
 #may be needed if the user 'display' doesn't own the tty
