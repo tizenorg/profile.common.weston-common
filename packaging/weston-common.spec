@@ -113,9 +113,9 @@ cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-tty.rules <<'EOF'
 SUBSYSTEM=="tty", KERNEL=="tty7", OWNER="%{daemon_user}", SECLABEL{smack}="^"
 EOF
 
-# user 'display' must also be able to access /dev/input/event*
+# user 'display' must also be able to access /dev/input/*
 cat >%{buildroot}%{_sysconfdir}/udev/rules.d/99-input.rules <<'EOF'
-SUBSYSTEM=="input", KERNEL=="event*", MODE="0660", GROUP="input", SECLABEL{smack}="^"
+SUBSYSTEM=="input", MODE="0660", GROUP="input", SECLABEL{smack}="^"
 EOF
 
 # install desktop file
