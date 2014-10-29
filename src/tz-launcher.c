@@ -48,7 +48,7 @@ gboolean
 file_is_desktop_file_for_application (GFile *file, gboolean store_values, gchar ***table)
 {
 	gboolean result;
-
+	gchar *appid;
 	GKeyFile *keyfile = g_key_file_new ();
 	g_key_file_load_from_file (keyfile, g_file_get_path(file), G_KEY_FILE_NONE, NULL);
 
@@ -56,7 +56,13 @@ file_is_desktop_file_for_application (GFile *file, gboolean store_values, gchar 
 	gchar **values = g_new (gchar*, 7);
 	values[0] = g_key_file_get_value (keyfile, "Desktop Entry", "Name", &error);
 	values[1] = g_key_file_get_value (keyfile, "Desktop Entry", "Comment", NULL);
-	values[2] = g_key_file_get_value (keyfile, "Desktop Entry", "Exec", &error);
+	appid = g_key_file_get_value (keyfile, "Desktop Entry", "X-TIZEN-AppID", NULL);
+	if (!appid)
+		values[2] = g_key_file_get_value (keyfile, "Desktop Entry", "Exec", &error);
+	else {
+		values[2] = g_strdup_printf ("app_launcher -s %s",appid);
+		g_free(appid);
+	}
 	values[3] = g_key_file_get_value (keyfile, "Desktop Entry", "Icon", NULL);
 	values[4] = g_key_file_get_value (keyfile, "Desktop Entry", "Terminal", NULL);
 	values[5] = g_key_file_get_value (keyfile, "Desktop Entry", "Type", &error);
