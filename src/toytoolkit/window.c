@@ -3848,6 +3848,15 @@ widget_schedule_resize(struct widget *widget, int32_t width, int32_t height)
 	window_schedule_resize(widget->window, width, height);
 }
 
+static int
+window_get_shadow_margin(struct window *window)
+{
+	if (window->frame && !window->fullscreen)
+		return frame_get_shadow_margin(window->frame->frame);
+	else
+		return 0;
+}
+
 static void
 handle_surface_configure(void *data, struct xdg_surface *xdg_surface,
 			 int32_t width, int32_t height,
@@ -3882,12 +3891,19 @@ handle_surface_configure(void *data, struct xdg_surface *xdg_surface,
 		}
 	}
 
-	if (width > 0 && height > 0)
-		window_schedule_resize(window, width, height);
-	else
+	if (width > 0 && height > 0) {
+		/* The width / height params are for window geometry,
+		 * but window_schedule_resize takes allocation. Add
+		 * on the shadow margin to get the difference. */
+		int margin = window_get_shadow_margin(window);
+		window_schedule_resize(window,
+				       width + margin * 2,
+				       height + margin *2);
+	} else {
 		window_schedule_resize(window,
 				       window->saved_allocation.width,
 				       window->saved_allocation.height);
+	}
 
 	xdg_surface_ack_configure(xdg_surface, serial);
 }
