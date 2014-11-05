@@ -3851,7 +3851,7 @@ widget_schedule_resize(struct widget *widget, int32_t width, int32_t height)
 static int
 window_get_shadow_margin(struct window *window)
 {
-	if (window->frame && !window->fullscreen)
+	if (window->frame && !window->fullscreen && !window->maximized)
 		return frame_get_shadow_margin(window->frame->frame);
 	else
 		return 0;
