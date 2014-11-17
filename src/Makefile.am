@@ -30,7 +30,7 @@ tz_launcher_SOURCES =					\
 	toytoolkit/window.c
 
 wl_pre_LDFLAGS = -export-dynamic
-wl_pre_CFLAGS = $(GCC_CFLAGS) $(CLIENT_CFLAGS)
+wl_pre_CFLAGS = $(GCC_CFLAGS) $(CLIENT_CFLAGS) -Wno-unused-result
 wl_pre_LDADD = $(DLOPEN_LIBS) $(CLIENT_LIBS)
 
 wl_pre_SOURCES = wl-pre.c

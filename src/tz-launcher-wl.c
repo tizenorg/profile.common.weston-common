@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -96,8 +97,8 @@ load_icon_from_themes (char *iconpath, char *path)
 		GFileType type = g_file_info_get_file_type (info);
 		switch (type) {
 			case G_FILE_TYPE_REGULAR:
-				if ((!strcmp (iconpath, g_file_info_get_name (info))) ||
-				    (!strcmp (g_strconcat (iconpath, ".png", NULL), g_file_info_get_name (info)))) {
+				if ((!g_strcmp0 (iconpath, g_file_info_get_name (info))) ||
+				    (!g_strcmp0 (g_strconcat (iconpath, ".png", NULL), g_file_info_get_name (info)))) {
 					icon_temp = cairo_image_surface_create_from_png (subpath);
 					return icon_temp;
 				}
@@ -106,6 +107,8 @@ load_icon_from_themes (char *iconpath, char *path)
 				icon_temp = load_icon_from_themes (iconpath, subpath);
 				if (icon_temp)
 					return icon_temp;
+				break;
+			default:
 				break;
 		}
 		g_free (subpath);
@@ -160,7 +163,7 @@ load_icon (char *path)
 	 /* resize the icon to 32x32 */
 	int width = cairo_image_surface_get_width(icon_temp);
 	int height = cairo_image_surface_get_height(icon_temp);
-	if (width != height != 32) {
+	if ((width != 32) && (height != 32)) {
 		double ratio = ((32.0/width) < (32.0/height) ? (32.0/width) : (32.0/height));
 		cairo_scale (cr, ratio, ratio);
 	}
@@ -184,17 +187,17 @@ sigchild_handler (int s)
 }
 
 static void
-keyboard_focus_handler(struct window *window,
-		       struct input *input, void *data)
+keyboard_focus_handler (struct window *window,
+		        struct input *input, void *data)
 {
-	window_schedule_redraw(main_window->window);
+	window_schedule_redraw (main_window->window);
 }
 
 static void
 launcher_button_handler(struct widget *widget,
-			      struct input *input, uint32_t time,
-			      uint32_t button,
-			      enum wl_pointer_button_state state, void *data)
+			struct input *input, uint32_t time,
+			uint32_t button, enum wl_pointer_button_state state,
+			void *data)
 {
 	struct launcher *launcher = data;
 
@@ -212,14 +215,14 @@ launcher_button_handler(struct widget *widget,
 }
 
 static void
-launcher_touch_up_handler(struct widget *widget, struct input *input,
-			     uint32_t serial, uint32_t time, int32_t id,
-			     void *data)
+launcher_touch_up_handler (struct widget *widget, struct input *input,
+			   uint32_t serial, uint32_t time, int32_t id,
+			   void *data)
 {
 	struct launcher *launcher = data;
 
 	launcher->focused = 0;
-	widget_schedule_redraw(widget);
+	widget_schedule_redraw (widget);
 
 	gchar **command = g_strsplit (launcher->exec, " ", 0);
 	if (command && command[0]) {
@@ -232,21 +235,21 @@ launcher_touch_up_handler(struct widget *widget, struct input *input,
 }
 
 static void
-launcher_touch_down_handler(struct widget *widget, struct input *input,
+launcher_touch_down_handler (struct widget *widget, struct input *input,
 			     uint32_t serial, uint32_t time, int32_t id,
 			     float x, float y, void *data)
 {
 	struct launcher *launcher = data;
 
 	launcher->focused = 1;
-	widget_schedule_redraw(widget);
+	widget_schedule_redraw (widget);
 
 	main_window->selected_launcher = launcher;
 }
 
 static int
-launcher_enter_handler(struct widget *widget, struct input *input,
-			     float x, float y, void *data)
+launcher_enter_handler (struct widget *widget, struct input *input,
+			float x, float y, void *data)
 {
 	struct launcher *launcher = data;
 
@@ -259,8 +262,8 @@ launcher_enter_handler(struct widget *widget, struct input *input,
 }
 
 static void
-launcher_leave_handler(struct widget *widget,
-			     struct input *input, void *data)
+launcher_leave_handler (struct widget *widget,
+			struct input *input, void *data)
 {
 	struct launcher *launcher = data;
 
@@ -272,8 +275,8 @@ launcher_leave_handler(struct widget *widget,
 }
 
 static int
-launcher_motion_handler(struct widget *widget, struct input *input,
-			      uint32_t time, float x, float y, void *data)
+launcher_motion_handler (struct widget *widget, struct input *input,
+			 uint32_t time, float x, float y, void *data)
 {
 	struct launcher *launcher = data;
 
@@ -283,71 +286,71 @@ launcher_motion_handler(struct widget *widget, struct input *input,
 }
 
 static void
-launcher_redraw_handler(struct widget *widget, void *data)
+launcher_redraw_handler (struct widget *widget, void *data)
 {
 	struct launcher *launcher = data;
 	struct rectangle allocation;
 	cairo_t *cr;
 
-	cr = widget_cairo_create(main_window->widget);
+	cr = widget_cairo_create (main_window->widget);
 
-	widget_get_allocation(widget, &allocation);
+	widget_get_allocation (widget, &allocation);
 	if (launcher->pressed) {
 		allocation.x++;
 		allocation.y++;
 	}
 
-	cairo_set_source_surface(cr, launcher->icon,
-				 allocation.x, allocation.y);
-	cairo_paint(cr);
+	cairo_set_source_surface (cr, launcher->icon,
+				  allocation.x, allocation.y);
+	cairo_paint (cr);
 
 	if (launcher->focused) {
-		cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.4);
-		cairo_mask_surface(cr, launcher->icon,
-				   allocation.x, allocation.y);
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.4);
+		cairo_mask_surface (cr, launcher->icon,
+				    allocation.x, allocation.y);
 	}
 
-	cairo_destroy(cr);
+	cairo_destroy (cr);
 }
 
 void
 main_window_add_launcher (gchar **desktopentry)
 {
 	struct launcher *launcher;
-	launcher = xzalloc(sizeof *launcher);
+	launcher = xzalloc (sizeof *launcher);
 
 	launcher->name = g_strdup (desktopentry[0]);
 	launcher->comment = g_strdup (desktopentry[1]);
 	launcher->exec = g_strdup (desktopentry[2]);
 	launcher->icon = load_icon (desktopentry[3]);
 
-	if (strcmp("true", g_ascii_strdown(desktopentry[4],-1)) == 0)
+	if (g_strcmp0 ("true", g_ascii_strdown (desktopentry[4],-1)) == 0)
 		launcher->terminal = TRUE;
 	else
 		launcher->terminal = FALSE;
 
-	wl_list_insert(main_window->launcher_list.prev, &launcher->link);
+	wl_list_insert (main_window->launcher_list.prev, &launcher->link);
 
-	launcher->widget = widget_add_widget(main_window->widget, launcher);
-	window_set_keyboard_focus_handler(main_window->window, keyboard_focus_handler);
-	widget_set_enter_handler(launcher->widget, launcher_enter_handler);
-	widget_set_leave_handler(launcher->widget, launcher_leave_handler);
-	widget_set_motion_handler(launcher->widget, launcher_motion_handler);
-	widget_set_button_handler(launcher->widget, launcher_button_handler);
-	widget_set_touch_down_handler(launcher->widget, launcher_touch_down_handler);
-	widget_set_touch_up_handler(launcher->widget, launcher_touch_up_handler);
-	widget_set_redraw_handler(launcher->widget, launcher_redraw_handler);
+	launcher->widget = widget_add_widget (main_window->widget, launcher);
+	window_set_keyboard_focus_handler (main_window->window, keyboard_focus_handler);
+	widget_set_enter_handler (launcher->widget, launcher_enter_handler);
+	widget_set_leave_handler (launcher->widget, launcher_leave_handler);
+	widget_set_motion_handler (launcher->widget, launcher_motion_handler);
+	widget_set_button_handler (launcher->widget, launcher_button_handler);
+	widget_set_touch_down_handler (launcher->widget, launcher_touch_down_handler);
+	widget_set_touch_up_handler (launcher->widget, launcher_touch_up_handler);
+	widget_set_redraw_handler (launcher->widget, launcher_redraw_handler);
 }
 
 static void
-resize_handler(struct widget *widget, int32_t width, int32_t height, void *data)
+resize_handler (struct widget *widget, int32_t width, int32_t height, void *data)
 {
 	struct main_window *main_window = data;
 	struct launcher *launcher;
 	int x, y, w, h, i;
 
 	x = 40; y = 60; i = 0;
-	wl_list_for_each(launcher, &main_window->launcher_list, link) {
+	wl_list_for_each (launcher, &main_window->launcher_list, link) {
 		w = cairo_image_surface_get_width(launcher->icon);
 		h = cairo_image_surface_get_height(launcher->icon);
 		widget_set_allocation(launcher->widget,
@@ -361,7 +364,7 @@ resize_handler(struct widget *widget, int32_t width, int32_t height, void *data)
 }
 
 static void
-redraw_handler(struct widget *widget, void *data)
+redraw_handler (struct widget *widget, void *data)
 {
 	struct main_window *main_window = data;
 	struct rectangle allocation;
@@ -373,13 +376,13 @@ redraw_handler(struct widget *widget, void *data)
 	widget_get_allocation (main_window->widget, &allocation);
 
 	surface = window_get_surface (main_window->window);
-	cr = cairo_create(surface);
-	cairo_set_operator( cr, CAIRO_OPERATOR_SOURCE);
+	cr = cairo_create (surface);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_rectangle (cr,
-			allocation.x,
-			allocation.y,
-			allocation.width,
-			allocation.height);
+			 allocation.x,
+			 allocation.y,
+			 allocation.width,
+			 allocation.height);
 
 	red = green = blue = 0.0;
 	switch (getuid() % 10) {
@@ -401,6 +404,8 @@ redraw_handler(struct widget *widget, void *data)
 	    	               allocation.y + (allocation.height - extents.height));
 		cairo_show_text (cr, main_window->selected_launcher->name);
 	}
+
+	cairo_destroy (cr);
 }
 
 void
@@ -426,15 +431,15 @@ main_window_create (struct display *display, int desktopfiles, gchar ***desktopt
 	window_set_title (main_window->window, title);
 	g_free (title);
 
-	window_set_user_data(main_window->window, main_window);
-	widget_set_redraw_handler(main_window->widget, redraw_handler);
-	widget_set_resize_handler(main_window->widget, resize_handler);
+	window_set_user_data (main_window->window, main_window);
+	widget_set_redraw_handler (main_window->widget, redraw_handler);
+	widget_set_resize_handler (main_window->widget, resize_handler);
 
 	int rows = 0;
 	int margin = desktopfiles - 18;
 	if (margin > 0)
 		rows = ((margin/9 * 48) + 48);
-	widget_schedule_resize(main_window->widget, 480, 200 + rows);
+	widget_schedule_resize (main_window->widget, 480, 200 + rows);
 }
 
 void
@@ -444,10 +449,10 @@ main_window_destroy ()
 		cairo_surface_destroy (main_window->surface);
 
 	struct launcher *launcher, *tmp;
-	wl_list_for_each_safe(launcher, tmp, &main_window->launcher_list, link) {
+	wl_list_for_each_safe (launcher, tmp, &main_window->launcher_list, link) {
 		cairo_surface_destroy (launcher->icon);
-		widget_destroy(launcher->widget);
-		wl_list_remove(&launcher->link);
+		widget_destroy (launcher->widget);
+		wl_list_remove (&launcher->link);
 		free (launcher->name);
 		free (launcher->comment);
 		free (launcher->exec);

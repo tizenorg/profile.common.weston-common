@@ -44,7 +44,7 @@ ExclusiveArch:
 Summary: A small launcher for Wayland compositors
 
 %description tz-launcher
-A small launcher for Wayland compositors
+A small launcher for Wayland compositors, which reads .desktop files from paths given on the command line or in a config file, and then displays them graphically.
 ############
 
 %description
