@@ -11,6 +11,9 @@ gchar **desktoptable[MAX_DESKTOPFILES];
 int global_argc;
 char **global_argv;
 
+extern void tz_launcher_wl_reload (int desktopfiles, gchar ***desktoptable);
+extern void tz_launcher_wl_run (int desktopfiles, gchar ***desktoptable);
+
 
 gboolean
 file_is_parsable (GFile *file)
@@ -153,6 +156,8 @@ tz_launcher_parse_directory (GFile *directory)
 			case G_FILE_TYPE_DIRECTORY:
 				tz_launcher_parse_directory (file);
 				break;
+			default:
+				break;
 		}
 		g_object_unref (file);
 		g_object_unref (info);
@@ -172,9 +177,9 @@ tz_launcher_parse_config_file (GFile *file)
 
 	istream = g_file_read (file, NULL, NULL);
 	stream = g_data_input_stream_new (G_INPUT_STREAM(istream));
-	while (line = g_data_input_stream_read_line (stream, NULL, NULL, NULL)) {
+	while ((line = g_data_input_stream_read_line (stream, NULL, NULL, NULL))) {
 		line = g_strstrip (line);
-		if ((strcmp (line, "")) && (!g_str_has_prefix (line, "#"))) {
+		if ((g_strcmp0 (line, "")) && (!g_str_has_prefix (line, "#"))) {
 			linefile = g_file_new_for_path (line);
 			if (g_file_query_exists (linefile, NULL)) {
 
@@ -190,6 +195,8 @@ tz_launcher_parse_config_file (GFile *file)
 					break;
 				case G_FILE_TYPE_DIRECTORY:
 					tz_launcher_parse_directory (linefile);
+					break;
+				default:
 					break;
 				}
 
@@ -213,7 +220,7 @@ parse_args (int argc, char **argv)
 
 	for (i = 1; i < argc ; i++) {
 
-		if (!strcmp (argv[i], "-c")) {
+		if (!g_strcmp0 (argv[i], "-c")) {
 			desktopfile = g_file_new_for_path (argv[i+1]);
 			if (!g_file_query_exists (desktopfile, NULL)) {
 				g_printerr ("Config file \"%s\" does not exist !\n", argv[i+1]);
@@ -244,6 +251,8 @@ parse_args (int argc, char **argv)
 			case G_FILE_TYPE_DIRECTORY:
 				tz_launcher_parse_directory (desktopfile);
 				break;
+			default:
+				break;
 		}
 
 		g_object_unref (desktopfile);
@@ -271,9 +280,6 @@ main (int argc, char **argv)
                          "        tz-launcher -c <list-of-.desktop-files>.conf\n");
 		return 0;
 	}
-
-	g_type_init ();
-
 
 	signal (SIGUSR1, sigreload_handler);
 	global_argc = argc;
