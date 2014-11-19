@@ -217,6 +217,7 @@ struct window {
 	struct rectangle saved_allocation;
 	struct rectangle min_allocation;
 	struct rectangle pending_allocation;
+	struct rectangle last_geometry;
 	int x, y;
 	int redraw_needed;
 	int redraw_task_scheduled;
@@ -3847,53 +3848,64 @@ widget_schedule_resize(struct widget *widget, int32_t width, int32_t height)
 	window_schedule_resize(widget->window, width, height);
 }
 
-static void
-handle_surface_configure(void *data, struct xdg_surface *xdg_surface,
-			 int32_t width, int32_t height)
+static int
+window_get_shadow_margin(struct window *window)
 {
-	struct window *window = data;
-
-	window_schedule_resize(window, width, height);
+	if (window->frame && !window->fullscreen && !window->maximized)
+		return frame_get_shadow_margin(window->frame->frame);
+	else
+		return 0;
 }
 
 static void
-handle_surface_change_state(void *data, struct xdg_surface *xdg_surface,
-			    uint32_t state,
-			    uint32_t value,
-			    uint32_t serial)
+handle_surface_configure(void *data, struct xdg_surface *xdg_surface,
+			 int32_t width, int32_t height,
+			 struct wl_array *states, uint32_t serial)
 {
 	struct window *window = data;
+	uint32_t *p;
 
-	switch (state) {
-	case XDG_SURFACE_STATE_MAXIMIZED:
-		window->maximized = value;
-		break;
-	case XDG_SURFACE_STATE_FULLSCREEN:
-		window->fullscreen = value;
-		break;
+	window->maximized = 0;
+	window->fullscreen = 0;
+	window->resizing = 0;
+	window->focused = 0;
+
+	wl_array_for_each(p, states) {
+		uint32_t state = *p;
+		switch (state) {
+		case XDG_SURFACE_STATE_MAXIMIZED:
+			window->maximized = 1;
+			break;
+		case XDG_SURFACE_STATE_FULLSCREEN:
+			window->fullscreen = 1;
+			break;
+		case XDG_SURFACE_STATE_RESIZING:
+			window->resizing = 1;
+			break;
+		case XDG_SURFACE_STATE_ACTIVATED:
+			window->focused = 1;
+			break;
+		default:
+			/* Unknown state */
+			break;
+		}
 	}
 
-	if (!window->fullscreen && !window->maximized)
+	if (width > 0 && height > 0) {
+		/* The width / height params are for window geometry,
+		 * but window_schedule_resize takes allocation. Add
+		 * on the shadow margin to get the difference. */
+		int margin = window_get_shadow_margin(window);
+		window_schedule_resize(window,
+				       width + margin * 2,
+				       height + margin *2);
+	} else {
 		window_schedule_resize(window,
 				       window->saved_allocation.width,
 				       window->saved_allocation.height);
+	}
 
-	xdg_surface_ack_change_state(xdg_surface, state, value, serial);
-	window_schedule_redraw(window);
-}
-
-static void
-handle_surface_activated(void *data, struct xdg_surface *xdg_surface)
-{
-	struct window *window = data;
-	window->focused = 1;
-}
-
-static void
-handle_surface_deactivated(void *data, struct xdg_surface *xdg_surface)
-{
-	struct window *window = data;
-	window->focused = 0;
+	xdg_surface_ack_configure(xdg_surface, serial);
 }
 
 static void
@@ -3905,14 +3917,11 @@ handle_surface_delete(void *data, struct xdg_surface *xdg_surface)
 
 static const struct xdg_surface_listener xdg_surface_listener = {
 	handle_surface_configure,
-	handle_surface_change_state,
-	handle_surface_activated,
-	handle_surface_deactivated,
 	handle_surface_delete,
 };
 
 static void
-window_sync_transient_for(struct window *window)
+window_sync_parent(struct window *window)
 {
 	struct wl_surface *parent_surface;
 
@@ -3924,28 +3933,42 @@ window_sync_transient_for(struct window *window)
 	else
 		parent_surface = NULL;
 
-	xdg_surface_set_transient_for(window->xdg_surface, parent_surface);
+	xdg_surface_set_parent(window->xdg_surface, parent_surface);
+}
+
+window_get_geometry(struct window *window, struct rectangle *geometry)
+{
+	if (window->frame && !window->fullscreen)
+		frame_input_rect(window->frame->frame,
+				 &geometry->x,
+				 &geometry->y,
+				 &geometry->width,
+				 &geometry->height);
+	else
+		window_get_allocation(window, geometry);
 }
 
 static void
-window_sync_margin(struct window *window)
+window_sync_geometry(struct window *window)
 {
-	int margin;
+	struct rectangle geometry;
 
 	if (!window->xdg_surface)
 		return;
 
-	if (!window->frame)
+	window_get_geometry(window, &geometry);
+	if (geometry.x == window->last_geometry.x &&
+	    geometry.y == window->last_geometry.y &&
+	    geometry.width == window->last_geometry.width &&
+	    geometry.height == window->last_geometry.height)
 		return;
 
-	margin = frame_get_shadow_margin(window->frame->frame);
-
-	/* Shadow size is the same on every side. */
-	xdg_surface_set_margin(window->xdg_surface,
-				     margin,
-				     margin,
-				     margin,
-				     margin);
+	xdg_surface_set_window_geometry(window->xdg_surface,
+				        geometry.x,
+				        geometry.y,
+				        geometry.width,
+				        geometry.height);
+	window->last_geometry = geometry;
 }
 
 static void
@@ -3955,8 +3978,8 @@ window_flush(struct window *window)
 
 	if (!window->custom) {
 		if (window->xdg_surface) {
-			window_sync_transient_for(window);
-			window_sync_margin(window);
+			window_sync_parent(window);
+			window_sync_geometry(window);
 		}
 	}
 
@@ -4145,10 +4168,10 @@ window_set_fullscreen(struct window *window, int fullscreen)
 	if (window->fullscreen == fullscreen)
 		return;
 
-	xdg_surface_request_change_state(window->xdg_surface,
-					 XDG_SURFACE_STATE_FULLSCREEN,
-					 fullscreen ? 1 : 0,
-					 0);
+	if (fullscreen)
+		xdg_surface_set_fullscreen(window->xdg_surface, NULL);
+	else
+		xdg_surface_unset_fullscreen(window->xdg_surface);
 }
 
 int
@@ -4166,10 +4189,10 @@ window_set_maximized(struct window *window, int maximized)
 	if (window->maximized == maximized)
 		return;
 
-	xdg_surface_request_change_state(window->xdg_surface,
-					 XDG_SURFACE_STATE_MAXIMIZED,
-					 maximized ? 1 : 0,
-					 0);
+	if (maximized)
+		xdg_surface_set_maximized(window->xdg_surface);
+	else
+		xdg_surface_unset_maximized(window->xdg_surface);
 }
 
 void
@@ -4432,7 +4455,7 @@ window_set_transient_for(struct window *window,
 			 struct window *parent_window)
 {
 	window->transient_for = parent_window;
-	window_sync_transient_for(window);
+	window_sync_parent(window);
 }
 
 struct window *
@@ -5041,7 +5064,7 @@ static const struct xdg_shell_listener xdg_shell_listener = {
 	xdg_shell_ping,
 };
 
-#define XDG_VERSION 3 /* The version of xdg-shell that we implement */
+#define XDG_VERSION 4 /* The version of xdg-shell that we implement */
 #ifdef static_assert
 static_assert(XDG_VERSION == XDG_SHELL_VERSION_CURRENT,
 	      "Interface version doesn't match implementation version");
