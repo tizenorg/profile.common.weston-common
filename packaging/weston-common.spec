@@ -45,6 +45,12 @@ Summary: A small launcher for Wayland compositors
 
 %description tz-launcher
 A small launcher for Wayland compositors, which reads .desktop files from paths given on the command line or in a config file, and then displays them graphically.
+############ tz-greeter
+%package tz-greeter
+Summary: A small greeter based on Tizen Login Manager for Wayland compositors
+
+%description tz-greeter
+A small greeter based on Tizen Login Manager for Wayland compositors. It uses Tizen Login Manager to display a list of users and allow them to log in or log out interactively.
 ############
 
 %description
@@ -172,3 +178,10 @@ rm -f %{_unitdir_user}/default.target.requires/weston-user.service
 %license src/COPYING
 %{_bindir}/tz-launcher
 %{_bindir}/wl-pre
+
+%files tz-greeter
+%manifest %{name}.manifest
+%defattr(-,root,root)
+%license src/COPYING
+%{_bindir}/tz-greeter
+%{_datadir}/tz-greeter/user.png

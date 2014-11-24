@@ -89,7 +89,7 @@ else
 fi
 AC_SUBST(JPEG_LIBS)
 
-PKG_CHECK_MODULES(GLIB, [glib-2.0 gio-2.0])
+PKG_CHECK_MODULES(GLIB, [glib-2.0 gio-2.0 gio-unix-2.0])
 
 PKG_CHECK_MODULES(CLIENT, [wayland-client cairo >= 1.10.0 xkbcommon wayland-cursor])
 

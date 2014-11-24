@@ -8,9 +8,24 @@ AM_CPPFLAGS = 					\
 	-I$(top_srcdir)/toytoolkit		\
 	-DDATADIR='"$(datadir)"'
 
+greeterdatadir = $(datadir)/tz-greeter
+dist_greeterdata_DATA = data/tz-greeter/user.png
+
 CLEANFILES =
 
-bin_PROGRAMS += tz-launcher wl-pre
+bin_PROGRAMS += tz-greeter tz-launcher wl-pre
+
+tz_greeter_LDFLAGS = -export-dynamic
+tz_greeter_CPPFLAGS = $(AM_CPPFLAGS)
+tz_greeter_CFLAGS = $(GCC_CFLAGS) $(PNG_CFLAGS) $(PIXMAN_CFLAGS) $(CLIENT_CFLAGS) $(CAIRO_EGL_CFLAGS) $(GLIB_CFLAGS)
+tz_greeter_LDADD = $(DLOPEN_LIBS) $(PNG_LIBS) $(PIXMAN_LIBS) $(CLIENT_LIBS) $(CAIRO_EGL_LIBS) $(JPEG_LIBS) $(GLIB_LIBS) -lm
+
+tz_greeter_SOURCES =					\
+	tz-greeter.c					\
+	tz-greeter-wl.c					\
+	tlm/tlm-dbus-login-gen.c			\
+	tlm/tlm-dbus-utils.c				\
+	$(toytoolkit_SOURCES)
 
 tz_launcher_LDFLAGS = -export-dynamic
 tz_launcher_CPPFLAGS = $(AM_CPPFLAGS)
@@ -20,6 +35,9 @@ tz_launcher_LDADD = $(DLOPEN_LIBS) $(PNG_LIBS) $(PIXMAN_LIBS) $(CLIENT_LIBS) $(C
 tz_launcher_SOURCES =					\
 	tz-launcher.c					\
 	tz-launcher-wl.c				\
+	$(toytoolkit_SOURCES)
+
+toytoolkit_SOURCES =					\
 	toytoolkit/shared/frame.c			\
 	toytoolkit/shared/image-loader.c		\
 	toytoolkit/shared/cairo-util.c			\
