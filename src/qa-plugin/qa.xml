@@ -1,0 +1,14 @@
+<protocol name="qa">
+
+  <interface name="qa" version="1">
+
+    <request name="surface_list"/>
+    <request name="destroy" type="destructor"/>
+
+    <event name="list_surface">
+      <arg name="list" type="string"/>
+    </event>
+
+  </interface>
+
+</protocol>

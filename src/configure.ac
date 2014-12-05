@@ -93,6 +93,8 @@ PKG_CHECK_MODULES(GLIB, [glib-2.0 gio-2.0])
 
 PKG_CHECK_MODULES(CLIENT, [wayland-client cairo >= 1.10.0 xkbcommon wayland-cursor])
 
+PKG_CHECK_MODULES(SERVER, [wayland-server])
+
   # Only check for cairo-egl if a GL or GLES renderer requested
   AS_IF([test "x$cairo_modules" = "xcairo-glesv2"], [
     PKG_CHECK_MODULES(CAIRO_EGL, [wayland-egl egl >= 7.10 cairo-egl >= 1.11.3 $cairo_modules],
@@ -105,7 +107,14 @@ PKG_CHECK_MODULES(CLIENT, [wayland-client cairo >= 1.10.0 xkbcommon wayland-curs
 AM_CONDITIONAL(HAVE_CAIRO_GLESV2,
 	       [test "x$have_cairo_egl" = "xyes" -a "x$cairo_modules" = "xcairo-glesv2" -a "x$enable_egl" = "xyes"])
 
-AC_CONFIG_FILES([Makefile])
+AC_PATH_PROG([wayland_scanner], [wayland-scanner])
+if test x$wayland_scanner = x; then
+	AC_MSG_ERROR([wayland-scanner is needed to compile the qa plugin])
+fi
+
+PKG_CHECK_MODULES(WAYLAND_SCANNER, wayland-scanner)
+
+AC_CONFIG_FILES([Makefile qa-plugin/Makefile])
 
 AC_OUTPUT
 

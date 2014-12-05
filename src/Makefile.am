@@ -1,5 +1,7 @@
 bin_PROGRAMS =
 
+SUBDIRS=qa-plugin
+
 all-local :
 
 AM_CFLAGS = $(GCC_CFLAGS)

@@ -25,6 +25,8 @@ BuildRequires:  pkgconfig(xkbcommon)
 BuildRequires:  pkgconfig(wayland-client)
 BuildRequires:  pkgconfig(wayland-cursor)
 BuildRequires:  pkgconfig(wayland-egl)
+BuildRequires:  pkgconfig(wayland-scanner)
+BuildRequires:  pkgconfig(wayland-server)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(pixman-1)
@@ -45,6 +47,12 @@ Summary: A small launcher for Wayland compositors
 
 %description tz-launcher
 A small launcher for Wayland compositors, which reads .desktop files from paths given on the command line or in a config file, and then displays them graphically.
+############ qa-plugin
+%package qa-plugin
+Summary: A Q&A plugin for Weston
+
+%description qa-plugin
+A small Weston plugin, disabled by default, which enables features such as listing surfaces along with positions and coordinates.
 ############
 
 %description
@@ -172,3 +180,10 @@ rm -f %{_unitdir_user}/default.target.requires/weston-user.service
 %license src/COPYING
 %{_bindir}/tz-launcher
 %{_bindir}/wl-pre
+
+%files qa-plugin
+%manifest %{name}.manifest
+%defattr(-,root,root)
+%license src/COPYING
+%{_bindir}/weston-qa-client
+%{_libdir}/weston/qa-plugin.so
