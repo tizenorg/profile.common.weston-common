@@ -1,0 +1,29 @@
+
+QA plugin for Weston (Tizen)
+****************************
+
+This is a small plugin which enables some debugging stuff,
+which can be retrieved by the "weston-qa-client" client.
+
+
+ INSTALLATION :
+ ------------
+
+1) Temporary
+   --------
+ start weston with the "--modules" parameter :
+
+$ weston --modules=desktop-shell.so,qa-plugin.so
+
+
+2) Permanent
+   ---------
+ in "weston.ini" (default path : "/etc/xdg/weston/weston.ini"), replace :
+
+modules=desktop-shell.so
+ with
+modules=desktop-shell.so,qa-plugin.so
+
+
+ And then, run :
+$ weston-qa-client
