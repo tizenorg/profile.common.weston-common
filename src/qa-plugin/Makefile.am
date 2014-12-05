@@ -6,7 +6,7 @@ all-local :
 
 AM_CFLAGS = $(GCC_CFLAGS)
 
-AM_CPPFLAGS = 
+AM_CPPFLAGS =
 
 CLEANFILES =
 
