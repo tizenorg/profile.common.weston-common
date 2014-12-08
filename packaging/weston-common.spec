@@ -148,13 +148,8 @@ groupmod -A %{daemon_user} video
 mkdir -p %{_unitdir}/graphical.target.wants/
 ln -sf ../display-manager.path  %{_unitdir}/graphical.target.wants/
 
-# setup display manager access (inside user session)
-mkdir -p %{_unitdir_user}/default.target.requires/
-ln -sf ../weston-user.service  %{_unitdir_user}/default.target.requires/
-
 %postun
 rm -f %{_unitdir}/graphical.target.wants/display-manager.path
-rm -f %{_unitdir_user}/default.target.requires/weston-user.service
 
 %files
 %manifest %{name}.manifest
