@@ -112,8 +112,6 @@ if test x$wayland_scanner = x; then
 	AC_MSG_ERROR([wayland-scanner is needed to compile the qa plugin])
 fi
 
-PKG_CHECK_MODULES(WAYLAND_SCANNER, wayland-scanner)
-
 AC_CONFIG_FILES([Makefile qa-plugin/Makefile])
 
 AC_OUTPUT
