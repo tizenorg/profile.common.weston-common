@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <pwd.h>
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -128,7 +129,7 @@ load_icon (char *path)
 	cairo_surface_t *icon;
 	gchar *iconpath;
 	char *default_iconpath = DATADIR "/weston/icon_window.png";
-	
+
 	if (path)
 		iconpath = g_strdup (path);
 	else
@@ -363,6 +364,74 @@ resize_handler (struct widget *widget, int32_t width, int32_t height, void *data
 	}
 }
 
+static unsigned short crc16(const unsigned char* data_p, unsigned char length) {
+	unsigned char x;
+	unsigned short crc = 0xFFFF;
+
+	while (length--) {
+		x = crc >> 8 ^ *data_p++;
+		x ^= x>>4;
+        crc = (crc << 8) ^ ((unsigned short)(x << 12)) ^ ((unsigned short)(x <<5)) ^ ((unsigned short)x);
+	}
+    return crc;
+}
+
+#define HUE_RESOLUTION 512
+static void hsv_to_rgb(
+	unsigned char h0, unsigned char s, unsigned char v,
+	unsigned char* r, unsigned char* g, unsigned char *b
+) {
+
+	if(s == 0) {
+		*r = *g = *b = v;
+	}
+	else {
+		int h=h0*(360*HUE_RESOLUTION-1)/255; // change to range 0..(360*HUE_RESOLUTION-1)
+		int i = h / (60*HUE_RESOLUTION);
+		int p = (256*v - s*v) / 256;
+		if(i & 1) {
+			int q = (256*60*HUE_RESOLUTION*v - h*s*v + 60*HUE_RESOLUTION*s*v*i) / (256*60*HUE_RESOLUTION);
+			switch(i) {
+				case 1: *r = q; *g = v; *b = p; break;
+				case 3: *r = p; *g = q; *b = v; break;
+				case 5: *r = v; *g = p; *b = q; break;
+			}
+		} else {
+			int t = (256*60*HUE_RESOLUTION*v + h*s*v - 60*HUE_RESOLUTION*s*v*(i+1)) / (256*60*HUE_RESOLUTION);
+			switch(i) {
+				case 0: *r = v; *g = t; *b = p; break;
+				case 2: *r = p; *g = v; *b = t; break;
+				case 4: *r = t; *g = p; *b = v; break;
+			}
+		}
+	}
+}
+
+static void username_to_rgb(double* red, double *green, double *blue) {
+	unsigned char r,g,b;
+	r=g=b=0;
+
+	struct passwd* pwd=getpwuid(getuid());
+	if (pwd) {
+		// make a crc16 of the user name
+		unsigned short hsv=crc16(pwd->pw_name, strlen(pwd->pw_name));
+		// take the first byte for hue in [0..255]
+		unsigned char h=(hsv >> 8);
+		// take the second byte for saturation in [128..255]
+		unsigned char s=3*64+(hsv & 0xff)/4;
+		// assign a full value
+		unsigned char v=0xFF;
+		hsv_to_rgb(h,s,v,&r,&g,&b);
+	}
+
+	if (red)
+		*red = ((double)r)/255.0;
+	if (green)
+		*green = ((double)g)/255.0;
+	if (blue)
+		*blue = ((double)b)/255.0;
+}
+
 static void
 redraw_handler (struct widget *widget, void *data)
 {
@@ -384,14 +453,10 @@ redraw_handler (struct widget *widget, void *data)
 			 allocation.width,
 			 allocation.height);
 
-	red = green = blue = 0.0;
-	switch (getuid() % 10) {
-		case 0: red = green = blue = 0.0; break;
-		case 1: red = 1.0; break;
-		case 2: blue = 1.0; break;
-		case 3: green = 1.0; break;
-		case 9: red = green = 1.0; break;
-		default: red = blue = 1.0; break;
+	red = green = blue = -1.0;
+
+	if ((red<0.0) || (green<0.0) || (blue<0.0)) {
+		username_to_rgb(&red,&green,&blue);
 	}
 
 	cairo_set_source_rgba (cr, red, green, blue, 0.5);
