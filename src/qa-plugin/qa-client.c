@@ -1,6 +1,7 @@
  /* Copyright 2014 Manuel Bachmann <tarnyko@tarnyko.net> */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <wayland-client.h>
 
@@ -13,12 +14,20 @@ static void
 qa_handle_surface_list (void *data, struct qa *qa,
 			const char *list)
 {
-	printf ("qa-client: SURFACES LIST :\n%s", list);
+	printf ("SURFACES LIST :\n%s", list);
+	done = 1;
+}
+
+static void
+qa_handle_surface_move (void *data, struct qa *qa)
+{
+	printf ("SURFACE MOVE...\n");
 	done = 1;
 }
 
 static const struct qa_listener qa_listener = {
-	qa_handle_surface_list
+	qa_handle_surface_list,
+	qa_handle_surface_move
 };
 
 static void
@@ -28,7 +37,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
 	if (strcmp (interface, "qa") == 0) {
 		qa = wl_registry_bind (registry, id,
 				       &qa_interface, version);
-		printf ("qa-client: registered the \"qa\" interface.\n");
+		printf ("weston-qa-client: registered the \"qa\" interface.\n\n");
 	}
 }
 
@@ -46,20 +55,30 @@ static const struct wl_registry_listener registry_listener = {
 
 int main (int argc, char *argv[])
 {
+	if (((argc != 2) && (argc != 5)) ||
+	    ((argc == 2) && (strcmp(argv[1],"--help") == 0)) ||
+	    ((argc == 2) && (strcmp(argv[1],"--list") != 0)) ||
+	    ((argc == 5) && (strcmp(argv[1],"--move") != 0))) {
+		printf ("Usage : weston-qa-client --list : list displayed surfaces\n");
+		printf ("        weston-qa-client --move <ID> <x> <y> : move surface to position\n");
+		printf ("        weston-qa-client --help : this help section\n\n");
+		return 0;
+	}
+
 	struct wl_display *display = NULL;
 	struct wl_registry *registry = NULL;
 	int res = 0;
 
 	display = wl_display_connect (NULL);
 	if (!display) {
-		printf ("qa-client: display error.\n");
+		printf ("weston-qa-client: display error.\n");
 		printf ("Did you define XDG_RUNTIME_DIR ?\n");
 		return -1;
 	}
 
 	registry = wl_display_get_registry (display);
 	if (!registry) {
-		printf ("qa-client: registry error.\n");
+		printf ("weston-qa-client: registry error.\n");
 		return -1;
 	}
 
@@ -72,7 +91,13 @@ int main (int argc, char *argv[])
 
 	qa_add_listener (qa, &qa_listener, NULL);
 
-	qa_surface_list (qa);
+	if ((argc == 2) && (strcmp(argv[1],"--list") == 0)) {
+		qa_surface_list (qa);
+	} else if ((argc == 5) && (strcmp(argv[1],"--move") == 0)) {
+		qa_surface_move (qa, atoi(argv[2]),
+		                     atoi(argv[3]),
+		                     atoi(argv[4]));
+	}
 
 	while ((res != -1) && (done == 0))
 		res = wl_display_dispatch (display);

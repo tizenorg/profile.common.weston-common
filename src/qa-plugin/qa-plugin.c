@@ -23,12 +23,13 @@ qa_surface_list (struct wl_client *client,
 
 	resp = strdup ("");
 
-	wl_list_for_each (view, &ec->view_list, link) { printf ("RHA ");
+	wl_list_for_each (view, &ec->view_list, link) {
 		if ((view->surface) &&
 		    (view->geometry.x != 0.0) &&
 		    (view->geometry.y != 0.0)) {
-			asprintf (&temp, "Surface %p : X+Y = %.2f+%.2f - WxH = %dx%d\n",
-				  view->surface, view->geometry.x, view->geometry.y,
+			asprintf (&temp, "Surface %d : X+Y = %.2f+%.2f - WxH = %dx%d\n",
+				  (unsigned int) view->surface,
+				  view->geometry.x, view->geometry.y,
 				  view->surface->width, view->surface->height);
 			resp = realloc (resp, strlen(resp) + strlen (temp) + 1);
 			strncat (resp, temp, strlen(temp));
@@ -41,6 +42,29 @@ qa_surface_list (struct wl_client *client,
 }
 
 static void
+qa_surface_move (struct wl_client *client,
+		 struct wl_resource *resource,
+		 uint32_t id,
+		 uint32_t x,
+		 uint32_t y)
+{
+	struct weston_view *view;
+
+	weston_log ("qa-plugin: requested to move surface %d to %d+%d...\n", id, x, y);
+
+	wl_list_for_each (view, &ec->view_list, link) {
+		if ((view->surface) &&
+		    ((unsigned int) view->surface == id)) {
+			view->geometry.x = (float) x;
+			view->geometry.y = (float) y;
+			view->transform.dirty = 1;
+		}
+	}
+
+	qa_send_move_surface (resource);
+}
+
+static void
 qa_destroy (struct wl_client *client,
 	    struct wl_resource *resource)
 {
@@ -49,6 +73,7 @@ qa_destroy (struct wl_client *client,
 
 static const struct qa_interface qa_implementation = {
 	qa_surface_list,
+	qa_surface_move,
 	qa_destroy
 };
 

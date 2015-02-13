@@ -3,11 +3,20 @@
   <interface name="qa" version="1">
 
     <request name="surface_list"/>
+
+    <request name="surface_move">
+      <arg name="id" type="uint"/>
+      <arg name="x" type="uint"/>
+      <arg name="y" type="uint"/>
+    </request>
+
     <request name="destroy" type="destructor"/>
 
     <event name="list_surface">
       <arg name="list" type="string"/>
     </event>
+
+    <event name="move_surface"/>
 
   </interface>
 
