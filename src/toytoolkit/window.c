@@ -1491,7 +1491,7 @@ window_destroy(struct window *window)
 
 	wl_list_remove(&window->redraw_task.link);
 
-	wl_list_for_each(input, &display->input_list, link) {	  
+	wl_list_for_each(input, &display->input_list, link) {
 		if (input->touch_focus == window)
 			input->touch_focus = NULL;
 		if (input->pointer_focus == window)
@@ -2025,8 +2025,9 @@ tooltip_func(struct task *task, uint32_t events)
 	uint64_t exp;
 
 	if (read(tooltip->tooltip_fd, &exp, sizeof (uint64_t)) != sizeof (uint64_t))
-		abort();
-	window_create_tooltip(tooltip);
+		fprintf(stderr, "bad read from tooltip_fd %d\n",tooltip->tooltip_fd);
+	else
+		window_create_tooltip(tooltip);
 }
 
 #define TOOLTIP_TIMEOUT 500
@@ -3007,7 +3008,7 @@ touch_handle_down(void *data, struct wl_touch *wl_touch,
 			wl_list_insert(&input->touch_point_list, &tp->link);
 
 			if (widget->touch_down_handler)
-				(*widget->touch_down_handler)(widget, input, 
+				(*widget->touch_down_handler)(widget, input,
 							      serial, time, id,
 							      sx, sy,
 							      widget->user_data);
@@ -3088,7 +3089,7 @@ touch_handle_frame(void *data, struct wl_touch *wl_touch)
 
 	wl_list_for_each_safe(tp, tmp, &input->touch_point_list, link) {
 		if (tp->widget->touch_frame_handler)
-			(*tp->widget->touch_frame_handler)(tp->widget, input, 
+			(*tp->widget->touch_frame_handler)(tp->widget, input,
 							   tp->widget->user_data);
 	}
 }
